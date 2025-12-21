@@ -7,7 +7,7 @@
 **Music33** is a native iOS music player application built with **SwiftUI**. It focuses on a clean, dark-themed UI and smooth user experience for playing local audio files. This project demonstrates modern iOS development practices including MVVM architecture and complex state management.
 
 <p align="center">
-  <img src="path/to/your/screenshot.png" alt="App Screenshot" width="300" />
+  <img src="https://github.com/user-attachments/assets/cdbc6dab-82f4-444e-a4a2-61e845d8e9b6" alt="App Screenshot" width="300" />
 </p>
 
 ## ✨ Features
