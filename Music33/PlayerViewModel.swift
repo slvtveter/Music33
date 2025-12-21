@@ -15,6 +15,7 @@ class PlayerViewModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published var time: TimeInterval = 0.0
     @Published var currentTime: TimeInterval = 0.0
     @Published var currentImage: UIImage?
+    @Published var totalTime: TimeInterval = 0.0
     @Published var tracks = [Track]()
     @Published var isPlaying = false
     @Published var currentSong: Track?
@@ -61,10 +62,6 @@ class PlayerViewModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
             )
         }
     }
-    func showFullPlayer() {
-        if isPlaying {
-        }
-    }
     func extractCover(from url: URL) async {
         let asset = AVURLAsset(url: url)
         let metadata = try? await asset.load(.commonMetadata)
@@ -95,6 +92,7 @@ class PlayerViewModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
             setupTimer()
             isPlaying = true
             currentSong = track
+            self.totalTime = audioPlayer?.duration ?? 0.0
         } catch {
             print("There is problem with player: \(error.localizedDescription)")
         }

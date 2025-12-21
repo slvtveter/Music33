@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+internal import AVFAudio
 
 struct FullPlayerView: View {
     @ObservedObject var viewModel: PlayerViewModel
@@ -37,7 +38,56 @@ struct FullPlayerView: View {
                     Text(viewModel.currentSong?.artist ?? "")
                         .font(.headline)
                 }
+                .padding(.leading)
                 Spacer()
+            }
+            Slider(value: Binding(get: { viewModel.currentTime
+            }, set: { time in
+                viewModel.changeTime(to: time)
+            }), in: 0...viewModel.totalTime)
+            .accentColor(.white)
+            .padding(.horizontal)
+            HStack {
+                Text(viewModel.formatTime(viewModel.currentTime))
+                Spacer()
+                Text(viewModel.formatTime(viewModel.totalTime))
+            }
+            .padding(.horizontal)
+            HStack {
+                Button {
+                    withAnimation(.none) {
+                        viewModel.backSong()
+                    }
+                } label: {
+                    Image(systemName: "backward.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 36)
+                        .foregroundStyle(.indigo)
+                }
+                Button {
+                    withAnimation(.none) {
+                        viewModel.togglePlayPause()
+                    }
+                }label: {
+                    Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 64)
+                        .foregroundStyle(.purple.opacity(0.8))
+                        .contentTransition(.symbolEffect(.replace))
+                }
+                Button {
+                    withAnimation(.none) {
+                        viewModel.nextSong()
+                    }
+                }label: {
+                    Image(systemName: "forward.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 36)
+                        .foregroundStyle(.indigo)
+                }
             }
         }.preferredColorScheme(.dark)
     }
@@ -47,6 +97,8 @@ struct FullPlayerView: View {
     let prevVM = PlayerViewModel()
     if let first = prevVM.tracks.first {
         prevVM.playSong(track: first)
+        prevVM.audioPlayer?.pause()
+        prevVM.isPlaying = false
     }
     return FullPlayerView(viewModel: prevVM)
 }
