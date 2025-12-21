@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 struct Track: Identifiable {
     let id = UUID()
     let songName: String
