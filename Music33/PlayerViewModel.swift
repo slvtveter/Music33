@@ -62,16 +62,17 @@ class PlayerViewModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
             )
         }
     }
-    func extractCover(from url: URL) async {
+    func extractCover(from url: URL) async -> UIImage? {
         let asset = AVURLAsset(url: url)
-        let metadata = try? await asset.load(.commonMetadata)
-        if let artworkItem = metadata?.first(where: {$0.commonKey == .commonKeyArtwork }),
-           let data = try? await artworkItem.load(.dataValue),
-           let image = UIImage(data: data) {
-            self.currentImage = image
-        } else {
-            self.currentImage = nil
+        do {
+            let metadata = try? await asset.load(.commonMetadata)
+            if let artworkItem = metadata?.first(where: {$0.commonKey == .commonKeyArtwork }),
+               let data = try? await artworkItem.load(.dataValue),
+               let image = UIImage(data: data) {
+                return image
+            }
         }
+        return nil
     }
     func playSong(track: Track) {
         guard let url = Bundle.main.url(forResource: track.fileName, withExtension: "mp3")
@@ -80,9 +81,10 @@ class PlayerViewModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
             return
         }
         do {
-            self.currentImage = nil
+           // self.currentImage = nil
             Task {
-                await extractCover(from: url)
+                let cover = await extractCover(from: url)
+                self.currentImage = cover
             }
             audioPlayer?.stop()
             audioPlayer = try AVAudioPlayer(contentsOf: url)

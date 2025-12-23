@@ -7,6 +7,47 @@
 
 import SwiftUI
 
+struct SongRowView: View {
+    let track: Track
+    @ObservedObject var viewModel: PlayerViewModel
+    @State private var coverImage: UIImage?
+    var body: some View {
+        HStack {
+            if let image = coverImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 42, height: 42)
+                    .clipShape(RoundedRectangle.rect(cornerRadius: 4))
+                    .padding(.leading, 4)
+                    .padding(.trailing, 8)
+            } else {
+                ZStack {
+                    Image("questionmark.circle")
+                        .frame(width: 50, height: 50)
+                        .background(.gray.opacity(0.6))
+                }
+            }
+            VStack(alignment: .leading) {
+                let isCurrent = viewModel.currentSong?.id == track.id
+                Text(track.songName)
+                    .font(.headline)
+                    .foregroundStyle(isCurrent ? .purple : .primary)
+                Text(track.artist)
+                    .font(.caption)
+            }
+            Spacer()
+            
+        }
+        .task {
+            if coverImage == nil {
+                if let url = Bundle.main.url(forResource: track.fileName, withExtension: "mp3"){
+                    self.coverImage = await viewModel.extractCover(from: url)
+                }
+            }
+        }
+    }
+}
 struct ContentView: View {
     @StateObject var viewModel = PlayerViewModel()
     @State private var fullPlayerViewPresented = false
@@ -14,33 +55,7 @@ struct ContentView: View {
         ZStack(alignment: .bottom) {
             NavigationStack {
                 List(viewModel.tracks) { track in
-                    HStack {
-                        let isCurrent = viewModel.currentSong?.id == track.id
-                        var iconName: String {
-                            if isCurrent {
-                                return viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill"
-                            } else {
-                                return "music.note"
-                            }
-                        }
-                        Image(systemName: iconName)
-                            .font(.title2)
-                            .foregroundColor(isCurrent ? .purple : .gray)
-                            .frame(width: 40, height: 40)
-                            .background(isCurrent ? .red.opacity(0.2) : Color.secondary.opacity(0.2) )
-                            .clipShape(Circle())
-                            .scaleEffect(isCurrent ? 1.1 : 1.0)
-                            .contentTransition(.symbolEffect(.replace))
-                        VStack(alignment: .leading) {
-                            Text(track.songName)
-                                .font(.headline)
-                                .foregroundColor(isCurrent ? .purple.opacity(0.8) : .primary)
-                            Text(track.artist)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                    }
+                    SongRowView(track: track, viewModel: viewModel)
                     .contentShape(Rectangle())
                     .onTapGesture {
                         if viewModel.currentSong?.id == track.id {
@@ -59,7 +74,7 @@ struct ContentView: View {
                 miniPlayerView
             }
         }.preferredColorScheme(.dark)
-            .sheet(isPresented: $fullPlayerViewPresented) {
+            .fullScreenCover(isPresented: $fullPlayerViewPresented) {
                 FullPlayerView(viewModel: viewModel)
             }
     }

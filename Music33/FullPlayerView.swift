@@ -11,6 +11,7 @@ internal import AVFAudio
 struct FullPlayerView: View {
     @ObservedObject var viewModel: PlayerViewModel
     @Environment(\.dismiss) var dismiss
+    @State private var slideEdge: Edge = .trailing
     var body: some View {
         VStack(spacing: 20) {
             HStack {
@@ -25,12 +26,22 @@ struct FullPlayerView: View {
                     Text("Now is playing")
                 }
             }
-            if let image = viewModel.currentImage {
-                Image(uiImage: image)
-                    .resizable()
-                    .frame(width: 360, height: 360)
-                    .scaledToFill()
+            ZStack {
+                if let image = viewModel.currentImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .frame(width: 360, height: 360)
+                        .scaledToFill()
+                        .transition(.asymmetric(insertion: .move(edge: slideEdge), removal: .move(edge: slideEdge == .leading ? .trailing : .leading)))
+                        .id(viewModel.currentSong?.id)
+                } else {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(width: 360, height: 360)
+                }
             }
+            .clipped()
+            .frame(width: 360, height: 360)
             HStack {
                 VStack(alignment: .leading) {
                     Text(viewModel.currentSong?.songName ?? "")
@@ -53,9 +64,10 @@ struct FullPlayerView: View {
                 Text(viewModel.formatTime(viewModel.totalTime))
             }
             .padding(.horizontal)
-            HStack {
+            HStack(spacing: 12) {
                 Button {
-                    withAnimation(.none) {
+                    slideEdge = .leading
+                    withAnimation(.easeInOut(duration: 0.3)) {
                         viewModel.backSong()
                     }
                 } label: {
@@ -66,9 +78,7 @@ struct FullPlayerView: View {
                         .foregroundStyle(.indigo)
                 }
                 Button {
-                    withAnimation(.none) {
-                        viewModel.togglePlayPause()
-                    }
+                    viewModel.togglePlayPause()
                 }label: {
                     Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
                         .resizable()
@@ -78,7 +88,8 @@ struct FullPlayerView: View {
                         .contentTransition(.symbolEffect(.replace))
                 }
                 Button {
-                    withAnimation(.none) {
+                    slideEdge = .trailing
+                    withAnimation(.easeInOut(duration: 0.3)) {
                         viewModel.nextSong()
                     }
                 }label: {
